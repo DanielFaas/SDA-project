@@ -1,7 +1,6 @@
 {
-  "name": "Stats Project (uv)",
+  "name": "SDA Project",
   "build": {
-    // Points to the Dockerfile in the project root
     "context": "..",
     "dockerfile": "../Dockerfile"
   },
@@ -15,7 +14,7 @@
         // TELL VS CODE TO USE THE UV ENVIRONMENT AUTOMATICALLY
         "python.defaultInterpreterPath": "/app/.venv/bin/python",
         "python.terminal.activateEnvironment": true,
-        // vital for analysis: prevents pylint from complaining about missing imports
+        // Prevents pylint from complaining about missing imports
         "python.analysis.extraPaths": ["/app"]
       },
       "extensions": [
@@ -32,6 +31,5 @@
   // COMMANDS TO RUN AFTER CONTAINER IS CREATED
   "postCreateCommand": "uv sync",
 
-  // Run as root
   "remoteUser": "root"
 }

@@ -5,7 +5,6 @@ FROM python:3.12-slim-bookworm
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
-    openssh-client \
     # build-essential is often required for compiling statistical libraries
     build-essential \
     git \
