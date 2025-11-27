@@ -1,0 +1,37 @@
+{
+  "name": "Stats Project (uv)",
+  "build": {
+    // Points to the Dockerfile in the project root
+    "context": "..",
+    "dockerfile": "../Dockerfile"
+  },
+  
+  "workspaceFolder": "/app",
+
+  // Configure tool-specific properties
+  "customizations": {
+    "vscode": {
+      "settings": {
+        // TELL VS CODE TO USE THE UV ENVIRONMENT AUTOMATICALLY
+        "python.defaultInterpreterPath": "/app/.venv/bin/python",
+        "python.terminal.activateEnvironment": true,
+        // vital for analysis: prevents pylint from complaining about missing imports
+        "python.analysis.extraPaths": ["/app"]
+      },
+      "extensions": [
+        // Installs the Python extension automatically inside the container
+        "ms-python.python",
+        // Installs Ruff
+        "charliermarsh.ruff", 
+        // Nice CSV viewer for data analysis
+        "mechatroner.rainbow-csv"
+      ]
+    }
+  },
+
+  // COMMANDS TO RUN AFTER CONTAINER IS CREATED
+  "postCreateCommand": "uv sync",
+
+  // Run as root
+  "remoteUser": "root"
+}
