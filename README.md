@@ -64,4 +64,3 @@ If you need to run this without VS Code:
     ```bash
     docker run --rm -v $(pwd):/app stats-project python main.py
     ```
-```
