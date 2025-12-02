@@ -51,7 +51,7 @@ chess_games = chess_games.drop_duplicates(subset=['White', 'Black', 'UTCDate', '
 
 
 # Cut content: White, Black, UTCDate, UTCTime, WhiteRatingDiff, BlackRatingDiff, AN
-# TODO: Add turns from AN if needed
+# TODO: Add turns from AN if needed and opening _play_turns
 chess_games_small = chess_games[['Event', 'WhiteElo', 'BlackElo', 'Result', 'ECO', 'Opening', 'Termination']]
 
 chess_games_small = chess_games_small.rename(columns={
@@ -75,9 +75,11 @@ chess_games_small['winner'] = chess_games_small['winner'].replace({'unknown': No
 print(chess_games_small)
 
 # Split into 2 roughly equal parts
-# TODO: fix FutureWarning
-chunks = np.array_split(chess_games_small, 2)
+midpoint = len(chess_games_small) // 2
 
-# Save each chunk separately
-chunks[0].to_csv("chess_games_cleaned_part1.csv", index=False)
-chunks[1].to_csv("chess_games_cleaned_part2.csv", index=False)
+chunk1 = chess_games_small.iloc[:midpoint]
+chunk2 = chess_games_small.iloc[midpoint:]
+
+# Save chunks
+chunk1.to_csv("chess_games_cleaned_part1.csv", index=False)
+chunk2.to_csv("chess_games_cleaned_part2.csv", index=False)

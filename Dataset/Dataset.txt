@@ -1,2 +1,5 @@
 Dataset(s) here
 TODO: add explanation for different datasets + cleaned up versions
+TODO: the winning mapping has NaN values, decide what to do with that
+TODO: victory status is different in the two datasets
+TODO: Trim opening names
