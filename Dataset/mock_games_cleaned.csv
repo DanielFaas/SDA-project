@@ -1,0 +1,11 @@
+white_rating,black_rating,winner,termination_reason,opening_name,opening_eco,opening_play_turns,turns
+1500,1191,white,outoftime,slav defense: exchange variation,d10,5,13
+1322,1261,black,resign,nimzowitsch defense: kennedy variation,b00,4,16
+1496,1500,white,mate,king's pawn game: leonardis variation,c20,3,61
+1439,1454,white,mate,queen's pawn game: zukertort variation,d02,3,61
+1523,1469,white,mate,philidor defense,c41,5,95
+1250,1002,draw,draw,sicilian defense: mongoose variation,b27,4,5
+1520,1423,white,resign,blackmar-diemer gambit: pietrowsky defense,d00,10,33
+1413,2108,black,resign,nimzowitsch defense: kennedy variation | linksspringer variation,b00,5,9
+1439,1392,black,resign,italian game: schilling-kostic gambit,c50,6,66
+1381,1209,white,mate,scandinavian defense: mieses-kotroc variation,b01,4,119
