@@ -7,7 +7,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     build-essential \
     git \
-    openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the uv binary from the official image
