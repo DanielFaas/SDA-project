@@ -7,6 +7,10 @@
   
   "workspaceFolder": "/app",
 
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/app,type=bind"
+  ],
+
   // Configure tool-specific properties
   "customizations": {
     "vscode": {

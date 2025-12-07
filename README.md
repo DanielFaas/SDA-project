@@ -1,6 +1,6 @@
 # Statistical Analysis Project
 
-This project is set up for  statistical analysis using Python 3.12, uv and Docker.
+This project is set up for statistical analysis using Python 3.12, uv and Docker.
 
 ## Prerequisites
 
@@ -48,11 +48,15 @@ uv sync --upgrade
 ### Input/Output Data
 *   **Data:** Place your raw CSV files in the `Dataset/` folder.
 *   **Plots:** Save your figures to the `Plots/` folder.
-*   **File Sync:** The container uses a "bind mount". Files created inside the container (like `Plots/result.png`) will instantly appear in your OS folder, and vice-versa.
+*   **File Sync:** The container uses a "bind mount". Files created inside the container (like `Plots/result.png`) will instantly appear in your local folder, and vice-versa.
+
+### Important Notes
+*   All your project files from your local machine are mounted to `/app` inside the container.
+*   Changes made in either the container or your local machine are synchronized automatically.
 
 ---
 
-## Running without VS Code (CI/CLI)
+## Running without VS Code
 
 If you need to run this without VS Code:
 
@@ -60,8 +64,11 @@ If you need to run this without VS Code:
     ```bash
     docker build -t stats-project .
     ```
-2.  **Run the script:**
+2.  **Run a script:**
     ```bash
     docker run --rm -v $(pwd):/app stats-project python main.py
     ```
-```
+3.  **Run an interactive shell:**
+    ```bash
+    docker run --rm -it -v $(pwd):/app stats-project /bin/bash
+    ```
