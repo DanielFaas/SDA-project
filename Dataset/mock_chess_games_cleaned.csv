@@ -1,9 +1,0 @@
-game_type,white_rating,black_rating,winner,opening_eco,opening_name,termination_reason
-classical,1901,1896,white,d10,slav defense,time forfeit
-blitz,1641,1627,black,c20,king's pawn opening: 2.b3,normal
-blitz tournament,1647,1688,white,b01,scandinavian defense: mieses-kotroc variation,time forfeit
-correspondence,1706,1317,white,a00,van't kruijs opening,normal
-blitz tournament,1945,1900,black,b90,"sicilian defense: najdorf, lipnitsky attack",time forfeit
-blitz tournament,1773,1809,black,c27,vienna game,normal
-blitz tournament,1895,1886,black,b10,caro-kann defense: two knights attack,time forfeit
-blitz tournament,2155,2356,white,d02,queen's pawn game: london system,normal

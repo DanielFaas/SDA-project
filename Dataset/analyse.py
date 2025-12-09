@@ -2,10 +2,11 @@
 
 import pandas as pd
 
-games = pd.read_csv("games_cleaned.csv")
-chess_games1 = pd.read_csv("chess_games_cleaned_part1.csv")
-chess_games2 = pd.read_csv("chess_games_cleaned_part2.csv")
-chess_games = pd.concat([chess_games1, chess_games2], ignore_index=True)
+
+import chess
+import chess.engine
+
+chess_games = pd.read_csv("chess_games_risk.csv")
 
 
 def summarize_dataset(df, name):
@@ -26,8 +27,6 @@ def summarize_dataset(df, name):
         print("-"*40)
 
 
-
-summarize_dataset(games, "GAMES DATASET")
 
 # To avoid scientific notation for the big dataset
 pd.set_option('display.float_format', '{:,.0f}'.format)
