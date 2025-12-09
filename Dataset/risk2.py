@@ -166,3 +166,13 @@ print(df)
 
 df.to_csv("chess_games_risk.csv", index=False)
 
+# Split into 2 roughly equal parts
+
+midpoint = len(df) // 2
+
+chunk1 = df.iloc[:midpoint]
+chunk2 = df.iloc[midpoint:]
+
+# # Save chunks
+chunk1.to_csv("chess_games_risk_part1.csv", index=False)
+chunk2.to_csv("chess_games_risk_part2.csv", index=False)

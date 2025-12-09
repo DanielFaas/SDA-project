@@ -1,2 +1,3 @@
-Dataset/chess_games*.csv
-Dataset/games.csv
+Dataset/chess_games.csv
+Dataset/chess_games_cleaned.csv
+Dataset/chess_games_risk.csv
