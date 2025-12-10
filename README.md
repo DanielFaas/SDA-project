@@ -75,7 +75,9 @@ If you need to run this without VS Code:
 
 ## Combining the datasets
 Use the code below to combine two datasets, make sure you change the path if you are in a different folder.
+
 chess_games1 = pd.read_csv("chess_games_risk_part1.csv")
+
 chess_games2 = pd.read_csv("chess_games_risk_part2.csv")
 
 
