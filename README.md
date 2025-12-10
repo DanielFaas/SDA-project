@@ -72,3 +72,11 @@ If you need to run this without VS Code:
     ```bash
     docker run --rm -it -v $(pwd):/app stats-project /bin/bash
     ```
+
+## Combining the datasets
+Use the code below to combine two datasets, make sure you change the path if you are in a different folder.
+chess_games1 = pd.read_csv("chess_games_risk_part1.csv")
+chess_games2 = pd.read_csv("chess_games_risk_part2.csv")
+
+
+both_games = pd.concat([chess_games1, chess_games2], ignore_index=True, sort=False)
