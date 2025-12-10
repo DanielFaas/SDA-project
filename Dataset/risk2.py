@@ -137,6 +137,7 @@ df = pd.read_csv("chess_games_cleaned.csv")
 
 df["moves"] = df["AN"].apply(parse_an_to_moves)
 
+# TODO: Fix this
 # G = build_position_graph(df["moves"], max_depth=6)
 # print("Graph nodes:", len(G.nodes))
 # print("Graph edges:", len(G.edges))
