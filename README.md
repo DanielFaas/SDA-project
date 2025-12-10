@@ -21,6 +21,29 @@ To work on this project, you need:
 
 ---
 
+## Work Flow
+
+1. Start Docker Desktop
+2. Make sure you are on main
+```bash
+git checkout main
+```
+3. Make sure local repo is up to date
+```bash
+git pull
+```
+4. Create and go to your branch
+```bash
+git checkout -b <branch-name>
+```
+5. Reopen in container
+6. Do your work (commit frequently)
+7. reopen in local
+8. commit with message and add the file you changed (commit regularly)
+9. Three dots -> push, pull -> sync (publish the branch if it asks)
+
+10. When your branch is completely finished create a pull request.
+
 ## Managing Packages (uv)
 
 This project uses `uv` instead of standard pip/poetry. All dependency management should happen **inside the VS Code terminal**.
