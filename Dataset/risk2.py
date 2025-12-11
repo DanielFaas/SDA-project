@@ -1,5 +1,5 @@
 # This file calculates the risk score of an opening in a chess games
-# The method used here is based on the method used in the paperR isk-taking in adversarial games: What can 1 billion online chess games tell us
+# The method used here is based on the method used in the paper Risk-taking in adversarial games: What can 1 billion online chess games tell us
 # DOI: https://doi.org/10.31234/osf.io/vgpdj
 
 
@@ -132,21 +132,44 @@ def load_graph(filepath="graph.pkl"):
 def filter_moves_for_openings(moves, max_depth=10):
     return moves[:max_depth]
 
+def normalize_risk(values, low_percent=1, high_percent=99):
+    values = np.array(values, dtype=float)
 
-df = pd.read_csv("chess_games_cleaned.csv")
+    # Step 1: Compute robust boundaries
+    lower = np.percentile(values, low_percent)
+    upper = np.percentile(values, high_percent)
 
-df["moves"] = df["AN"].apply(parse_an_to_moves)
+    # Step 2: Clip
+    clipped = np.clip(values, lower, upper)
+
+    # Step 3: Min-max normalize to [0, 100]
+    normalized = 100 * (clipped - lower) / (upper - lower)
+
+    return normalized, lower, upper
+
+
+
+df1 = pd.read_csv("chess_games_cleaned.csv")
+
+df1["moves"] = df1["AN"].apply(parse_an_to_moves)
+
+df2 = pd.read_csv("chess_games_cleaned_blitz.csv")
+
+df2["moves"] = df2["AN"].apply(parse_an_to_moves)
+
+df = pd.concat([df1, df2], ignore_index=True, sort=False)
 
 # TODO: Fix this
-# G = build_position_graph(df["moves"], max_depth=6)
-# print("Graph nodes:", len(G.nodes))
-# print("Graph edges:", len(G.edges))
+G = build_position_graph(df["moves"], max_depth=6)
+print("Graph nodes:", len(G.nodes))
+print("Graph edges:", len(G.edges))
 
-# save_graph(G, "test_graph.pkl")
-G = load_graph("test_graph.pkl")
+save_graph(G, "position.pkl")
+G = load_graph("position.pkl")
 
 G = evaluate_positions(G, engine_path="/usr/games/stockfish", depth=10)
-
+save_graph(G, "evaluation.pkl")
+G = load_graph("evaluation.pkl")
 
 
 all_risks = []
@@ -161,13 +184,26 @@ all_mean_risks = [float(x) for x in all_mean_risks]
 
 df["mean_risk"] = all_mean_risks
 
-df = df[['white_rating', 'black_rating', 'winner', 'opening_eco', 'opening_name', 'termination_reason', 'mean_risk']]
+df = df[['event', 'white_rating', 'black_rating', 'winner', 'opening_name', 'termination_reason', 'mean_risk']]
 
-print(df)
 
 df.to_csv("chess_games_risk.csv", index=False)
 
 # Split into 2 roughly equal parts
+df = df[df["mean_risk"] < 100]
+df = df[df["mean_risk"] > 1]
+
+
+df["mean_risk"], lower, upper = normalize_risk(df["mean_risk"])
+print(df)
+
+df["event"] = df["event"].str.replace(
+    "Blitz", "b", case=False, regex=False
+)
+df["event"] = df["event"].str.replace(
+    "Classical", "c", case=False, regex=False
+)
+
 
 midpoint = len(df) // 2
 
