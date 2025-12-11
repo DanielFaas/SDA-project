@@ -56,4 +56,63 @@ plt.show()
 
 # MULTINOMIAL LOGISTIC REGRESSION
 
+# We use the formula API
+# Control for ratings and event type to isolate the effect of mean risk
 
+# We set the reference category to draw so the model calculates
+# Normal Decisive vs Draw and Time Forfeit vs Draw
+
+model_formula = 'game_outcome ~ mean_risk + white_rating + black_rating + C(event)'
+mnlogit_model = smf.mnlogit(formula=model_formula, data=df).fit()
+
+print(mnlogit_model.summary())
+
+# CALCULATE ODDS RATIOS
+
+params = mnlogit_model.params
+conf = mnlogit_model.conf_int()
+conf['OR'] = params
+conf.columns = ['2.5%', '97.5%', 'Odds_Ratio']
+odds_ratios = np.exp(conf)
+
+print("\nOdds Ratios with 95% Confidence Intervals:\n", odds_ratios)
+
+# VISUALIZE ODDS RATIOS
+# Forest plot which allows us to see the magnitude and direction of effects
+# on the likelihood of different outcomes relative to the reference category.
+
+# Reset index to make the outcome categories accessible for plotting
+odds_ratios_plot = odds_ratios.reset_index()
+odds_ratios_plot = odds_ratios_plot.rename(columns={'level_0': 'Outcome', 'level_1': 'Variable'})
+
+# Filter out the Intercept as it's usually on a different scale and less interpretable
+odds_ratios_plot = odds_ratios_plot[odds_ratios_plot['Variable'] != 'Intercept']
+
+plt.figure(figsize=(12, 8))
+sns.set_style("whitegrid")
+
+# Create the point plot with error bars
+# We iterate through unique outcomes to plot them
+outcomes = odds_ratios_plot['Outcome'].unique()
+colors = sns.color_palette("husl", len(outcomes))
+
+for i, outcome in enumerate(outcomes):
+    subset = odds_ratios_plot[odds_ratios_plot['Outcome'] == outcome]
+    
+    plt.errorbar(x=subset['Odds_Ratio'], 
+                 y=subset['Variable'], 
+                 xerr=[subset['Odds_Ratio'] - subset['2.5%'], subset['97.5%'] - subset['Odds_Ratio']],
+                 fmt='o', 
+                 label=outcome,
+                 color=colors[i],
+                 capsize=5,
+                 alpha=0.7)
+
+plt.axvline(x=1, color='red', linestyle='--', linewidth=1, label='No Effect (OR=1)')
+plt.title('Odds Ratios for Game Outcomes (Reference: Draw)')
+plt.xlabel('Odds Ratio (log scale)')
+plt.xscale('log')
+plt.legend(title='Outcome vs Draw')
+plt.tight_layout()
+plt.savefig('./Plots/mnlogit_odds_ratios.png', dpi=300)
+plt.close()
