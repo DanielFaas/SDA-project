@@ -2,66 +2,58 @@
 Opening Risk Analysis Module
 
 This module analyzes the relationship between chess opening risk scores and game outcomes
-using logistic regression. It generates synthetic chess game data with player ratings and
-opening risk metrics, then fits a logistic regression model to determine whether opening
-risk scores significantly predict decisive game outcomes.
-
-Key findings are printed including model summary, odds ratios, and hypothesis test results
-for the opening risk coefficient.
+using multinomal logistic regression and a One-Way ANOVA test. ANOVA is used to determine
+games that end in draws have a different average risk than games that end normally, while
+logistic regression quantifies how opening risk influences the likelihood of decisive outcomes.
+High rating players frequently play safer openings and draw more frequently, so we need to use
+rating as a control variable in our regression.
 """
 
 import pandas as pd
 import numpy as np
-import statsmodels.api as sm
+import statsmodels.formula.api as smf
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# LOAD DATA
+
+df = pd.read_csv('./Data/opening_risk_data.csv')
+
+# FEATURE ENGINEERING
+
+def categorize_outcome(row):
+    if row['winner'] == 'draw':
+        return 'Draw'
+    elif row['termination_reason'] == 'time forfeit':
+        return 'Time Forfeit'
+    else:
+        return 'Normal Decisive'
+    
+df['game_outcome'] = df.apply(categorize_outcome, axis=1)
+
+# DATA VISUALIZATION
+
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='game_outcome', y='mean_risk', data=df, palette='Set3')
+plt.title('Distribution of Opening Risk by Game Outcome')
+plt.ylabel('Opening Risk (0 - 100)')
+plt.xlabel('Game Outcome')
+plt.savefig('./Plots/opening_risk_boxplot.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+# ONE-WAY ANOVA TEST
+
+tukey = pairwise_tukeyhsd(endog=df['mean_risk'],
+                          groups=df['game_outcome'],
+                          alpha=0.05)
+
+print(tukey.summary())
+
+fig = tukey.plot_simultaneous(xlabel="Mean Risk", ylabel="Game Outcome")
+plt.title("Multiple Comparison of Mean Risk by Outcome")
+plt.show()
+
+# MULTINOMIAL LOGISTIC REGRESSION
 
 
-# FAKE DATA GENERATION
-
-np.random.seed(42)
-n_games = 2000
-
-data = {
-    'WhiteElo': np.random.normal(1500, 200, n_games),
-    'BlackElo': np.random.normal(1500, 200, n_games),
-    'OpeningRiskScore': np.random.uniform(0, 10, n_games), 
-}
-
-df = pd.DataFrame(data)
-
-def simulate_outcome(row):
-    elo_diff = abs(row['WhiteElo'] - row['BlackElo'])
-    prob_decisive = 0.40 + (elo_diff * 0.0005) + (row['OpeningRiskScore'] * 0.03)
-    prob_decisive = min(prob_decisive, 0.95)
-    return 1 if np.random.random() < prob_decisive else 0
-
-df['IsDecisive'] = df.apply(simulate_outcome, axis=1)
-
-
-# FEATURES
-
-df['RatingDiff'] = (df['WhiteElo'] - df['BlackElo']).abs()
-df['AvgRating'] = (df['WhiteElo'] + df['BlackElo']) / 2
-
-# LOGISTIC REGRESSION MODEL
-
-Y = df['IsDecisive']
-X = df[['OpeningRiskScore', 'RatingDiff', 'AvgRating']]
-X = sm.add_constant(X)
-model = sm.Logit(Y, X).fit()
-
-# RESULTS
-
-print(model.summary())
-
-print("\n--- ODDS RATIOS ---")
-params = model.params
-conf = model.conf_int()
-conf['Odds Ratio'] = params
-conf.columns = ['5%', '95%', 'Odds Ratio']
-print(np.exp(conf))
-
-p_value_risk = model.pvalues['OpeningRiskScore']
-coef_risk = model.params['OpeningRiskScore']
-
-print("\n--- HYPOTHESIS TEST RESULT ---")
-print(f"P-value for Opening Risk: {p_value_risk:.5f}")
