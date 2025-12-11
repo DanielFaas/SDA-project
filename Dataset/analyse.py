@@ -6,9 +6,11 @@ import pandas as pd
 import chess
 import chess.engine
 
-chess_games = pd.read_csv("chess_games_risk.csv")
+chess_games1 = pd.read_csv("chess_games_risk_part1.csv")
+chess_games2 = pd.read_csv("chess_games_risk_part2.csv")
 
 
+both_games = pd.concat([chess_games1, chess_games2], ignore_index=True, sort=False)
 
 def summarize_dataset(df, name):
     print("\n" + "="*70)
@@ -31,5 +33,5 @@ def summarize_dataset(df, name):
 
 # To avoid scientific notation for the big dataset
 pd.set_option('display.float_format', '{:,.0f}'.format)
-summarize_dataset(chess_games, "CHESS GAMES DATASET")
+summarize_dataset(both_games, "CHESS GAMES DATASET")
 

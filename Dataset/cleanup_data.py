@@ -21,7 +21,10 @@ chess_games = pd.read_csv("chess_games.csv")
 chess_games = chess_games.drop_duplicates(subset=['White', 'Black', 'UTCDate', 'UTCTime', 'WhiteElo', 'BlackElo'])
 
 chess_games = chess_games[
-    chess_games['Event'].str.contains('classical', case=False, na=False) &
+    (
+        chess_games['Event'].str.contains('Blitz', case=False, na=False)
+    )
+    &
     ~chess_games['Event'].str.contains('tournament', case=False, na=False)
 ]
 
@@ -31,19 +34,18 @@ chess_games = chess_games[
     ~chess_games['Termination'].str.contains('rules', case=False, na=False)
 ]
 
-
-
-
 chess_games['AN'] = chess_games['AN'].apply(extract_moves)
-# Cut content: White, Black, UTCDate, UTCTime, WhiteRatingDiff, BlackRatingDiff, AN
 
-chess_games_small = chess_games[['WhiteElo', 'BlackElo', 'Result', 'ECO', 'Opening', 'Termination', 'AN']]
+
+# Cut content: White, Black, UTCDate, UTCTime, WhiteRatingDiff, BlackRatingDiff, AN, Opening_eco
+
+chess_games_small = chess_games[['Event', 'WhiteElo', 'BlackElo', 'Result', 'Opening', 'Termination', 'AN']]
 
 chess_games_small = chess_games_small.rename(columns={
+    'Event': 'event',
     'WhiteElo': 'white_rating',
     'BlackElo': 'black_rating',
     'Result': 'winner',
-    'ECO': 'opening_eco',
     'Opening': 'opening_name',
     'Termination': 'termination_reason'
 })
@@ -57,4 +59,8 @@ chess_games_small['black_rating'] = pd.to_numeric(chess_games_small['black_ratin
 
 print(chess_games_small)
 
-chess_games_small.to_csv("chess_games_cleaned.csv", index=False)
+chess_games_small = chess_games_small.iloc[:1000000]
+
+chess_games_small.to_csv("chess_games_cleaned_blitz.csv", index=False)
+
+#         chess_games['Event'].str.contains('Blitz', case=False, na=False)
