@@ -10,7 +10,6 @@ rating as a control variable in our regression.
 """
 
 import pandas as pd
-import numpy as np
 import statsmodels.formula.api as smf
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 import seaborn as sns
@@ -18,14 +17,21 @@ import matplotlib.pyplot as plt
 
 # LOAD DATA
 
-df = pd.read_csv('./Data/opening_risk_data.csv')
+chess_games1 = pd.read_csv("./Dataset/chess_games_risk_part1.csv")
+
+chess_games2 = pd.read_csv("./Dataset/chess_games_risk_part2.csv")
+
+df = pd.concat([chess_games1, chess_games2], ignore_index=True, sort=False)
+
+# Clean whitespace from event column
+df['event'] = df['event'].str.strip()
 
 # FEATURE ENGINEERING
 
 def categorize_outcome(row):
     if row['winner'] == 'draw':
         return 'Draw'
-    elif row['termination_reason'] == 'time forfeit':
+    elif row['termination_reason'] == 'Time forfeit':
         return 'Time Forfeit'
     else:
         return 'Normal Decisive'
@@ -35,7 +41,7 @@ df['game_outcome'] = df.apply(categorize_outcome, axis=1)
 # DATA VISUALIZATION
 
 plt.figure(figsize=(10, 6))
-sns.boxplot(x='game_outcome', y='mean_risk', data=df, palette='Set3')
+sns.boxplot(x='game_outcome', y='mean_risk', data=df, palette='Set3', hue='game_outcome')
 plt.title('Distribution of Opening Risk by Game Outcome')
 plt.ylabel('Opening Risk (0 - 100)')
 plt.xlabel('Game Outcome')
@@ -48,71 +54,47 @@ tukey = pairwise_tukeyhsd(endog=df['mean_risk'],
                           groups=df['game_outcome'],
                           alpha=0.05)
 
-print(tukey.summary())
+# Save Tukey test summary to file
+with open('./Plots/tukey_summary.txt', 'w') as f:
+    f.write(str(tukey.summary()))
 
-fig = tukey.plot_simultaneous(xlabel="Mean Risk", ylabel="Game Outcome")
-plt.title("Multiple Comparison of Mean Risk by Outcome")
-plt.show()
+# Plotting the means with confidence intervals
+group_stats = df.groupby('game_outcome')['mean_risk'].agg(['mean', 'sem']).reset_index()
+group_stats['ci'] = 1.96 * group_stats['sem'] # 95% CI
+
+plt.figure(figsize=(10, 6))
+plt.bar(group_stats['game_outcome'], group_stats['mean'], 
+    yerr=group_stats['ci'], capsize=10, color='steelblue', alpha=0.7, edgecolor='black')
+plt.title('Mean Opening Risk by Game Outcome')
+plt.ylabel('Mean Opening Risk (0 - 100)')
+plt.xlabel('Game Outcome')
+plt.tight_layout()
+plt.savefig('./Plots/tukey_mean_risk.png', dpi=300, bbox_inches='tight')
+plt.close()
 
 # MULTINOMIAL LOGISTIC REGRESSION
 
-# We use the formula API
-# Control for ratings and event type to isolate the effect of mean risk
+# Calculate average rating per game
+df['avg_rating'] = (df['white_rating'] + df['black_rating']) / 2
 
-# We set the reference category to draw so the model calculates
-# Normal Decisive vs Draw and Time Forfeit vs Draw
+# Convert game_outcome to categorical with specified order
+df['game_outcome'] = pd.Categorical(
+    df['game_outcome'], 
+    categories=['Draw', 'Normal Decisive', 'Time Forfeit'], 
+    ordered=True 
+)
 
-model_formula = 'game_outcome ~ mean_risk + white_rating + black_rating + C(event)'
+# Create numeric code for the formula because it kept giving dumb errors
+df['outcome_code'] = df['game_outcome'].cat.codes
+
+# RUN MODEL
+
+# Define formula using numeric target
+model_formula = 'outcome_code ~ mean_risk + avg_rating + C(event)'
+
+print("Running Multinomial Logistic Regression...")
 mnlogit_model = smf.mnlogit(formula=model_formula, data=df).fit()
 
-print(mnlogit_model.summary())
-
-# CALCULATE ODDS RATIOS
-
-params = mnlogit_model.params
-conf = mnlogit_model.conf_int()
-conf['OR'] = params
-conf.columns = ['2.5%', '97.5%', 'Odds_Ratio']
-odds_ratios = np.exp(conf)
-
-print("\nOdds Ratios with 95% Confidence Intervals:\n", odds_ratios)
-
-# VISUALIZE ODDS RATIOS
-# Forest plot which allows us to see the magnitude and direction of effects
-# on the likelihood of different outcomes relative to the reference category.
-
-# Reset index to make the outcome categories accessible for plotting
-odds_ratios_plot = odds_ratios.reset_index()
-odds_ratios_plot = odds_ratios_plot.rename(columns={'level_0': 'Outcome', 'level_1': 'Variable'})
-
-# Filter out the Intercept as it's usually on a different scale and less interpretable
-odds_ratios_plot = odds_ratios_plot[odds_ratios_plot['Variable'] != 'Intercept']
-
-plt.figure(figsize=(12, 8))
-sns.set_style("whitegrid")
-
-# Create the point plot with error bars
-# We iterate through unique outcomes to plot them
-outcomes = odds_ratios_plot['Outcome'].unique()
-colors = sns.color_palette("husl", len(outcomes))
-
-for i, outcome in enumerate(outcomes):
-    subset = odds_ratios_plot[odds_ratios_plot['Outcome'] == outcome]
-    
-    plt.errorbar(x=subset['Odds_Ratio'], 
-                 y=subset['Variable'], 
-                 xerr=[subset['Odds_Ratio'] - subset['2.5%'], subset['97.5%'] - subset['Odds_Ratio']],
-                 fmt='o', 
-                 label=outcome,
-                 color=colors[i],
-                 capsize=5,
-                 alpha=0.7)
-
-plt.axvline(x=1, color='red', linestyle='--', linewidth=1, label='No Effect (OR=1)')
-plt.title('Odds Ratios for Game Outcomes (Reference: Draw)')
-plt.xlabel('Odds Ratio (log scale)')
-plt.xscale('log')
-plt.legend(title='Outcome vs Draw')
-plt.tight_layout()
-plt.savefig('./Plots/mnlogit_odds_ratios.png', dpi=300)
-plt.close()
+# Save summary to file
+with open('./Plots/mnlogit_summary.txt', 'w') as f:
+    f.write(str(mnlogit_model.summary()))

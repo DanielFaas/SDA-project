@@ -1,0 +1,8 @@
+         Multiple Comparison of Means - Tukey HSD, FWER=0.05         
+=====================================================================
+     group1          group2     meandiff p-adj  lower   upper  reject
+---------------------------------------------------------------------
+           Draw Normal Decisive   1.1208   0.0   0.969  1.2726   True
+           Draw    Time Forfeit   0.7174   0.0  0.5554  0.8793   True
+Normal Decisive    Time Forfeit  -0.4034   0.0 -0.4781 -0.3288   True
+---------------------------------------------------------------------
