@@ -197,12 +197,11 @@ df = df[df["mean_risk"] > 1]
 df["mean_risk"], lower, upper = normalize_risk(df["mean_risk"])
 print(df)
 
-df["event"] = df["event"].str.replace(
-    "Blitz", "b", case=False, regex=False
-)
-df["event"] = df["event"].str.replace(
-    "Classical", "c", case=False, regex=False
-)
+
+df["event"] = df["event"].str.replace(r"\s*Blitz\s*", " b ", case=False, regex=True)
+df["event"] = df["event"].str.replace(r"\s*Classical\s*", " c ", case=False, regex=True)
+
+df["event"] = df["event"].str.replace(r"\s+", " ", regex=True).str.strip()
 
 
 midpoint = len(df) // 2
