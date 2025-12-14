@@ -11,6 +11,7 @@ import pickle
 from tqdm import tqdm
 import pandas as pd
 import ast
+import os
 
 # Makes a clean list of chess moves
 def parse_an_to_moves(an_string_or_list):
@@ -132,17 +133,15 @@ def load_graph(filepath="graph.pkl"):
 def filter_moves_for_openings(moves, max_depth=10):
     return moves[:max_depth]
 
+# Normalizes the risk between 0 and 100
 def normalize_risk(values, low_percent=1, high_percent=99):
     values = np.array(values, dtype=float)
 
-    # Step 1: Compute robust boundaries
     lower = np.percentile(values, low_percent)
     upper = np.percentile(values, high_percent)
 
-    # Step 2: Clip
     clipped = np.clip(values, lower, upper)
 
-    # Step 3: Min-max normalize to [0, 100]
     normalized = 100 * (clipped - lower) / (upper - lower)
 
     return normalized, lower, upper
@@ -159,18 +158,27 @@ df2["moves"] = df2["AN"].apply(parse_an_to_moves)
 
 df = pd.concat([df1, df2], ignore_index=True, sort=False)
 
-# TODO: Fix this
-G = build_position_graph(df["moves"], max_depth=6)
-print("Graph nodes:", len(G.nodes))
-print("Graph edges:", len(G.edges))
+position_path = "position.pkl"
 
-save_graph(G, "position.pkl")
-G = load_graph("position.pkl")
+if not os.path.exists(position_path):
+    G = build_position_graph(df["moves"], max_depth=6)
+    print("Graph nodes:", len(G.nodes))
+    print("Graph edges:", len(G.edges))
+    save_graph(G, position_path)
+else:
+    G = load_graph(position_path)
 
-G = evaluate_positions(G, engine_path="/usr/games/stockfish", depth=10)
-save_graph(G, "evaluation.pkl")
-G = load_graph("evaluation.pkl")
+evaluation_path = "evaluation.pkl"
 
+if not os.path.exists(evaluation_path):
+    G = evaluate_positions(
+        G,
+        engine_path="/usr/games/stockfish",
+        depth=10
+    )
+    save_graph(G, evaluation_path)
+else:
+    G = load_graph(evaluation_path)
 
 all_risks = []
 all_max_risks = []
