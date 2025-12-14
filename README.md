@@ -106,3 +106,7 @@ chess_games2 = pd.read_csv("chess_games_risk_part2.csv")
 
 both_games = pd.concat([chess_games1, chess_games2], ignore_index=True, sort=False)
 ```
+
+## AI USAGE
+
+Used AI to generate unit tests. Ain't nobody got time for that.

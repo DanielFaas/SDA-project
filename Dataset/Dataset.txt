@@ -1,4 +1,12 @@
-Dataset(s) here
-TODO: add explanation for different datasets + cleaned up versions
-TODO: Trim opening names
-TODO: Update mock datasets
+This folder contains the dataset and the files used to process the dataset.
+The original dataset can be downloaded from Kaggle: https://www.kaggle.com/datasets/arevel/chess-games
+
+Here is a quick overview of every file:
+cleanup_data.py: takes all classical games from chess_games.csv (the download from Kaggle) and saves it to chess_games_cleaned.csv
+cleanup_data_blitz.py: takes all blitz games from chess_games.csv (the download from Kaggle) and saves it to chess_games_cleaned_blitz.csv
+calculate_risk.py: takes both chess_games_cleaned.csv and chess_games_cleaned_blitz.csv and calculates the risk value for each game and saves it to chess_games_risk_part1.csv and chess_games_risk_part2.csv
+analyse.py: gives a quick overview of the unique values in the different categories as well as a numeric summary
+
+Some final notes:
+The files cleanup_data.py and cleanup_data_blitz.py have been deliberately split, due to the size of the dataset and the processing needed for the AN fields, thus avoiding crashes.
+calculate_risk.py takes a very long time to run, thus making use of the pkl files. To test this file, either lower the depth values or only take the first few values of the dataset after deleting the pkl files in both instances
