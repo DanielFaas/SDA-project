@@ -20,7 +20,7 @@ chess_games = chess_games.drop_duplicates(subset=['White', 'Black', 'UTCDate', '
 
 chess_games = chess_games[
     (
-        chess_games['Event'].str.contains('Classical', case=False, na=False)
+        chess_games['Event'].str.contains('Blitz', case=False, na=False)
     )
     &
     ~chess_games['Event'].str.contains('tournament', case=False, na=False)
@@ -57,5 +57,6 @@ chess_games_small['black_rating'] = pd.to_numeric(chess_games_small['black_ratin
 
 print(chess_games_small)
 
+chess_games_small = chess_games_small.iloc[:1000000]
 
-chess_games_small.to_csv("chess_games_cleaned.csv", index=False)
+# chess_games_small.to_csv("chess_games_cleaned_blitz.csv", index=False)
