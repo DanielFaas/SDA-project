@@ -17,22 +17,22 @@ def mock_chess_data():
         'white_rating': np.random.normal(1500, 200, n),
         'black_rating': np.random.normal(1500, 200, n),
         'mean_risk': np.random.uniform(0, 100, n),
-        'event': np.random.choice(['blitz', 'classical'], n),
+        'event': np.random.choice([' b ', ' c '], n), # Simulate raw event strings with spaces
         
         # Ensure we have all 3 types of outcomes represented
         'winner': np.random.choice(['white', 'black', 'draw'], n),
-        'termination_reason': np.random.choice(['normal', 'time forfeit'], n)
+        'termination_reason': np.random.choice(['normal', 'Time forfeit'], n) # Note capitalization
     }
     
     df = pd.DataFrame(data)
     
     # Inject a known logic case for manual verification
     # Case 1: Draw (Should be 'Draw')
-    df.iloc[0] = [1500, 1500, 50, 'blitz', 'draw', 'normal']
+    df.iloc[0] = [1500, 1500, 50, ' b ', 'draw', 'normal']
     # Case 2: Time Forfeit (Should be 'Time Forfeit')
-    df.iloc[1] = [1500, 1500, 50, 'blitz', 'white', 'time forfeit']
+    df.iloc[1] = [1500, 1500, 50, ' b ', 'white', 'Time forfeit']
     # Case 3: Normal Win (Should be 'Normal Decisive')
-    df.iloc[2] = [1500, 1500, 50, 'blitz', 'black', 'normal']
+    df.iloc[2] = [1500, 1500, 50, ' b ', 'black', 'normal']
     
     # Inject a missing value to ensure cleaning works
     df.iloc[3, 0] = np.nan # Missing white_rating
@@ -48,79 +48,126 @@ def test_outcome_categorization_logic(mock_chess_data):
     """
     df = mock_chess_data.copy()
     
-    # Apply your logic (Vectorized approach)
-    conditions = [
-        (df['winner'] == 'draw'),
-        (df['termination_reason'] == 'time forfeit')
-    ]
-    choices = ['Draw', 'Time Forfeit']
-    df['game_outcome'] = np.select(conditions, choices, default='Normal Decisive')
+    # Apply your logic (Function approach as used in main script)
+    def categorize_outcome(row):
+        if row['winner'] == 'draw':
+            return 'Draw'
+        elif row['termination_reason'] == 'Time forfeit':
+            return 'Time Forfeit'
+        else:
+            return 'Normal Decisive'
+
+    df['game_outcome'] = df.apply(categorize_outcome, axis=1)
     
     # Assert specific rows we manually set in the fixture
     assert df.iloc[0]['game_outcome'] == 'Draw', "Logic Error: Draw winner didn't result in 'Draw'"
     assert df.iloc[1]['game_outcome'] == 'Time Forfeit', "Logic Error: Time forfeit didn't result in 'Time Forfeit'"
     assert df.iloc[2]['game_outcome'] == 'Normal Decisive', "Logic Error: Normal win didn't result in 'Normal Decisive'"
 
-def test_data_cleaning_and_preparation(mock_chess_data):
+def test_data_preparation_pipeline(mock_chess_data):
     """
-    Verifies that NaNs are dropped and categorical conversion works.
+    Verifies the full data prep pipeline: cleaning, mapping, and feature engineering.
     """
     df = mock_chess_data.copy()
     
-    # Pre-check: we put a NaN in row 3
-    assert df['white_rating'].isna().sum() > 0
+    # 1. Clean Event & Map Time Control
+    df['event'] = df['event'].str.strip()
+    event_map = {'b': 'Blitz', 'c': 'Classical'}
+    df['time_control'] = df['event'].map(event_map)
     
-    # Apply Cleaning
-    df_clean = df.dropna(subset=['mean_risk', 'white_rating', 'black_rating', 'event'])
+    # Assert mapping worked
+    assert set(df['time_control'].unique()) == {'Blitz', 'Classical'}, "Time control mapping failed"
     
-    # Assert NaNs are gone
-    assert df_clean.shape[0] < df.shape[0], "Failed to drop rows with missing values"
-    assert df_clean['white_rating'].isna().sum() == 0
+    # 2. Calculate Avg Rating
+    df['avg_rating'] = (df['white_rating'] + df['black_rating']) / 2
+    assert not df['avg_rating'].isna().all(), "Avg rating calculation failed"
 
-def test_regression_model_runs_successfully(mock_chess_data):
+def test_binary_logistic_regression_model(mock_chess_data):
     """
-    The Big Test: Does the statistical model actually fit without crashing?
+    Verifies that the Binary Logistic Regression (Draw vs Normal Decisive) runs correctly.
     """
-    # 1. Setup
+    # Setup Data
     df = mock_chess_data.copy()
+    df['event'] = df['event'].str.strip()
+    event_map = {'b': 'Blitz', 'c': 'Classical'}
+    df['time_control'] = df['event'].map(event_map)
     
-    # Apply Logic
-    conditions = [
-        (df['winner'] == 'draw'),
-        (df['termination_reason'] == 'time forfeit')
-    ]
-    choices = ['Draw', 'Time Forfeit']
-    df['game_outcome'] = np.select(conditions, choices, default='Normal Decisive')
+    def categorize_outcome(row):
+        if row['winner'] == 'draw':
+            return 'Draw'
+        elif row['termination_reason'] == 'Time forfeit':
+            return 'Time Forfeit'
+        else:
+            return 'Normal Decisive'
+    df['game_outcome'] = df.apply(categorize_outcome, axis=1)
     
-    # Clean
-    df_clean = df.dropna().copy()
-    df_clean['avg_rating'] = (df_clean['white_rating'] + df_clean['black_rating']) / 2
+    df['avg_rating'] = (df['white_rating'] + df['black_rating']) / 2
     
-    # 2. Prepare Categories (The critical fix)
-    df_clean['game_outcome'] = pd.Categorical(
-        df_clean['game_outcome'], 
-        categories=['Draw', 'Normal Decisive', 'Time Forfeit'], 
-        ordered=True
-    )
-    df_clean['outcome_code'] = df_clean['game_outcome'].cat.codes
+    # Filter for Played Games (Exclude Forfeits)
+    df_played = df[df['game_outcome'] != 'Time Forfeit'].copy()
+    df_played = df_played.dropna() # Drop the injected NaN
     
-    # 3. Fit Model
-    model_formula = 'outcome_code ~ mean_risk + avg_rating + C(event)'
+    # Create Binary Target
+    df_played['draw_binary'] = (df_played['game_outcome'] == 'Draw').astype(int)
+    
+    # Standardize
+    df_played['mean_risk_z'] = (df_played['mean_risk'] - df_played['mean_risk'].mean()) / df_played['mean_risk'].std()
+    df_played['avg_rating_z'] = (df_played['avg_rating'] - df_played['avg_rating'].mean()) / df_played['avg_rating'].std()
+    
+    # Fit Model (Blitz subset)
+    subset = df_played[df_played['time_control'] == 'Blitz']
+    formula = 'draw_binary ~ mean_risk_z + avg_rating_z'
     
     try:
-        mnlogit_model = smf.mnlogit(formula=model_formula, data=df_clean).fit(disp=0)
+        logit_model = smf.logit(formula=formula, data=subset).fit(disp=0)
     except Exception as e:
-        pytest.fail(f"Model fitting crashed with error: {str(e)}")
+        pytest.fail(f"Binary Logit Model fitting crashed: {str(e)}")
         
-    # 4. Assertions on Results
-    # params should have shape (Num_Features, Num_Outcomes - 1)
-    # We have 2 outcomes (Normal, Forfeit) predicted relative to Reference (Draw)
-    # We have Intercept + risk + rating + event(T.c) = 4 features
+    # Assertions
+    assert 'mean_risk_z' in logit_model.params.index, "Risk variable missing from model"
+    assert 'avg_rating_z' in logit_model.params.index, "Rating variable missing from model"
+    assert not logit_model.pvalues.isna().all(), "Model failed to converge (NaN p-values)"
+
+def test_time_forfeit_model(mock_chess_data):
+    """
+    Verifies that the Time Forfeit Logistic Regression runs correctly.
+    """
+    # Setup Data
+    df = mock_chess_data.copy()
+    df['event'] = df['event'].str.strip()
+    event_map = {'b': 'Blitz', 'c': 'Classical'}
+    df['time_control'] = df['event'].map(event_map)
     
-    assert mnlogit_model.params.shape[1] == 2, "Model should predict 2 outcomes (relative to Draw)"
+    def categorize_outcome(row):
+        if row['winner'] == 'draw':
+            return 'Draw'
+        elif row['termination_reason'] == 'Time forfeit':
+            return 'Time Forfeit'
+        else:
+            return 'Normal Decisive'
+    df['game_outcome'] = df.apply(categorize_outcome, axis=1)
     
-    # Check if p-values exist (meaning convergence worked)
-    assert not mnlogit_model.pvalues.isna().all().all(), "Model returned all NaN p-values (did not converge)"
+    df['avg_rating'] = (df['white_rating'] + df['black_rating']) / 2
+    df['rating_diff'] = abs(df['white_rating'] - df['black_rating'])
     
-    # Check if 'mean_risk' is actually in the model
-    assert 'mean_risk' in mnlogit_model.params.index, "mean_risk variable was lost in the model"
+    df = df.dropna()
+    
+    # Create Binary Target
+    df['time_forfeit'] = (df['game_outcome'] == 'Time Forfeit').astype(int)
+    
+    # Standardize
+    df['mean_risk_z'] = (df['mean_risk'] - df['mean_risk'].mean()) / df['mean_risk'].std()
+    df['avg_rating_z'] = (df['avg_rating'] - df['avg_rating'].mean()) / df['avg_rating'].std()
+    df['rating_diff_z'] = (df['rating_diff'] - df['rating_diff'].mean()) / df['rating_diff'].std()
+    
+    # Fit Model
+    formula = 'time_forfeit ~ C(time_control) + avg_rating_z + rating_diff_z + mean_risk_z'
+    
+    try:
+        forfeit_model = smf.logit(formula=formula, data=df).fit(disp=0)
+    except Exception as e:
+        pytest.fail(f"Time Forfeit Model fitting crashed: {str(e)}")
+        
+    # Assertions
+    assert 'mean_risk_z' in forfeit_model.params.index, "Risk variable missing from forfeit model"
+    assert 'C(time_control)[T.Classical]' in forfeit_model.params.index, "Time control dummy missing"
