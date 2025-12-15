@@ -21,29 +21,6 @@ To work on this project, you need:
 
 ---
 
-## Work Flow
-
-1. Start Docker Desktop
-2. Make sure you are on main
-```bash
-git checkout main
-```
-3. Make sure local repo is up to date
-```bash
-git pull
-```
-4. Create and go to your branch
-```bash
-git checkout -b <branch-name>
-```
-5. Reopen in container
-6. Do your work (commit frequently)
-7. reopen in local
-8. commit with message and add the file you changed (commit regularly)
-9. Three dots -> push, pull -> sync (publish the branch if it asks)
-
-10. When your branch is completely finished create a pull request.
-
 ## Managing Packages (uv)
 
 This project uses `uv` instead of standard pip/poetry. All dependency management should happen **inside the VS Code terminal**.
@@ -77,6 +54,29 @@ uv sync --upgrade
 *   All your project files from your local machine are mounted to `/app` inside the container.
 *   Changes made in either the container or your local machine are synchronized automatically.
 
+## Git
+1. Start Docker Desktop
+2. Make sure you are on main
+```bash
+git checkout main
+```
+3. Make sure local repo is up to date
+```bash
+git pull
+```
+4. Create and go to your branch
+```bash
+git checkout -b <branch-name>
+```
+5. Reopen in container
+6. Do your work (commit frequently)
+7. Reopen in local
+8. Commit with message and add the file you changed (commit regularly)
+9. Three dots -> push, pull -> sync (publish the branch if it asks)
+10. Repeat 5-9 till the feature the branch targets is finished.
+11. When your branch is completely finished create a pull request.
+
+
 ---
 
 ## Running without VS Code
@@ -98,10 +98,15 @@ If you need to run this without VS Code:
 
 ## Combining the datasets
 Use the code below to combine two datasets, make sure you change the path if you are in a different folder.
-
+```python
 chess_games1 = pd.read_csv("chess_games_risk_part1.csv")
 
 chess_games2 = pd.read_csv("chess_games_risk_part2.csv")
 
 
 both_games = pd.concat([chess_games1, chess_games2], ignore_index=True, sort=False)
+```
+
+## AI USAGE
+
+Used AI to generate unit tests. Ain't nobody got time for that.
