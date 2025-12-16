@@ -2,4 +2,4 @@ Dataset/chess_games.csv
 Dataset/chess_games_cleaned.csv
 Dataset/chess_games_risk.csv
 Dataset/chess_games_cleaned_blitz.csv
-Tests/__pycache__/
+__pycache__/
