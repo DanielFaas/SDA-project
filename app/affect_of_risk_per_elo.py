@@ -1,6 +1,5 @@
 # This file analyses the third research question
-
-#TODO: Expand this comment
+# Effect of opening risk on win probability conditional on player ELO
 
 import pandas as pd
 import numpy as np
@@ -27,9 +26,6 @@ for game_type in ["c", "b"]:
     
     game_name = 'Classical' if game_type == 'c' else 'Blitz'
     name_for_plot = 'classical' if game_type == 'c' else 'blitz'
-    print("\n" + "=" * 70)
-    print(f"ANALYSIS FOR {game_name} GAMES")
-    print("=" * 70)
     
     df = full_df[full_df["event"] == game_type].copy()
 
@@ -145,14 +141,6 @@ for game_type in ["c", "b"]:
     print(f"Interaction Coefficient: {interaction_coef:.4f}")
     print(f"Interaction P-value: {interaction_pval:.4f}")
     
-    if interaction_pval < 0.05:
-        if interaction_coef > 0:
-            print("H1 Accepted: Risk benefits higher-rated players more (positive interaction)")
-        else:
-            print("H1: Risk benefits lower-rated players more (negative interaction)")
-    else:
-        print("H0 Kept: No significant difference in risk effect across skill levels")
-    
 
     # PLOT 3: Model Predictions
     risk_range = np.linspace(player_df["mean_risk"].min(), 
@@ -194,16 +182,19 @@ for game_type in ["c", "b"]:
     plt.close()
     
     
-    # PLOT 6: Heatmap of Win Rates
+    # PLOT 4: Heatmap of Win Rates
     player_df["risk_quintile"] = pd.qcut(player_df["mean_risk"], q=5, 
                                          labels=["Very Low", "Low", "Medium", "High", "Very High"])
     
     heatmap_data = player_df.groupby(["elo_category", "risk_quintile"], observed=False)["win"].agg(['mean', 'count']).reset_index()
     heatmap_pivot = heatmap_data.pivot(index="elo_category", columns="risk_quintile", values="mean")
+    heatmap_data["mean"] = heatmap_data["mean"] * 100
+    heatmap_pivot = heatmap_data.pivot(index="elo_category", columns="risk_quintile", values="mean")
+
     
     plt.figure(figsize=(12, 6))
     sns.heatmap(heatmap_pivot, annot=True, fmt='.3f', cmap='RdYlGn', 
-               center=0.5, vmin=0.3, vmax=0.7, cbar_kws={'label': 'Win Rate'})
+               center=50, vmin=30, vmax=70, cbar_kws={'label': 'Win Rate'})
     plt.title(f"{game_name}: Win Rate Heatmap by ELO and Risk Level", 
              fontsize=14, fontweight='bold')
     plt.xlabel("Risk Quintile", fontsize=12)
