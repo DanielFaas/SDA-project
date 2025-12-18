@@ -1,13 +1,27 @@
-# This file analyses the third research question
-# Effect of opening risk on win probability conditional on player ELO
+"""
+This code addresses the third research question of the project: how the
+riskiness of a chess opening relates to a player's probability of winning,
+conditional on ELO.
+
+The winning probability is modeled as a binary outcome (win vs loss/draw) and is
+estimated empirically from the game results. Player Elo is used as a continuous
+measure of skill, alongside controls for opponent Elo and color.
+
+Logistic regression is used to estimate the relationship between
+opening risk and winning probability, including an interaction term to test
+whether the effect of risk differs across skill levels. Results are presented
+separately for classical and blitz games.
+
+Outputs include summary plots, win-rate visualizations by risk and Elo group,
+model-based predicted probabilities, and heatmaps illustrating how opening risk
+and player skill relate to game outcomes.
+"""
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import statsmodels.formula.api as smf
-from scipy import stats
-
 
 sns.set_style("whitegrid")
 plt.rcParams['figure.figsize'] = (12, 8)
