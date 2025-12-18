@@ -9,7 +9,7 @@ We modeled the probability of a draw (1) versus a decisive result (0).
 *   **Classical**: Opening risk coefficient = **-0.0294** ($p < 0.001$)
 
 **Interpretation**:
-*   The negative coefficients indicate that as opening risk increases, the likelihood of a draw decreases.
+*   The negative coefficients indicate that as opening risk increases, the likelihood of a draw decreases. So For two otherwise identical games, the one with the riskier opening has a lower probability of ending in a draw.
 *   **Marginal Effects**: A one standard deviation increase in opening risk reduces the probability of a draw by approximately **0.17%** in Blitz and **0.14%** in Classical games. While the absolute magnitude is small (due to the low base rate of draws, ~5%), the effect is consistent and highly significant.
 
 ## Descriptive Statistics
@@ -22,7 +22,7 @@ Raw data shows a consistent pattern where drawn games feature safer openings on 
 | **Classical** | Draw | **28.28** |
 | | Normal Decisive | **29.26** |
 
-*   **Hypothesis Testing**: A Kruskal-Wallis test confirms these differences are statistically significant for both time controls ($p < 0.001$).
+*   **Hypothesis Testing**: A Kruskal-Wallis test confirms these differences are statistically significant for both time controls ($p < 0.001$). So drawn games use safer openings than decisive games, on average.
 
 ## Control Variables
 *   **Player Rating**: As expected, average player rating is a very strong positive predictor of draws ($z > 30$). Higher-rated players are much more likely to draw, but the effect of opening risk persists independently of this factor.
@@ -32,7 +32,7 @@ We analyzed time forfeits separately to justify their exclusion from the main mo
 
 *   **Opening Risk is Irrelevant**: In a logistic regression predicting time forfeits, the coefficient for opening risk was **0.0008** ($p = 0.651$), indicating **no statistical relationship** between opening risk and running out of time.
 *   **Drivers of Forfeits**: Time forfeits are primarily driven by the time control itself (Blitz > Classical) and rating differences, not the opening choice.
-*   **Robustness**: Including time forfeits in the main model (treating them as losses) barely changed the main risk coefficient (from **-0.0294** to **-0.0302**), confirming our results are robust.
+*   **Robustness**: Including time forfeits in the main model (treating them as losses) barely changed the main risk coefficient (from **1.0294** to **-0.0302**), confirming our results are robust.
 
 ## Methodological Rationale
 
@@ -57,3 +57,19 @@ We included **Average Rating** as a control variable because it is a known confo
 *   Higher-rated players are significantly more likely to draw.
 *   Higher-rated players may also select different openings.
 *   Without controlling for rating, we could not be sure if the observed effect was due to the opening itself or simply the skill level of the players choosing those openings.
+
+## Summary
+
+We examine whether the risk profile of an opening influences the likelihood that a chess game ends in a draw. Using binary logistic regression, we model the probability of a draw versus a decisive result as a function of opening risk, controlling for average player rating and estimating separate models for Blitz and Classical time controls.
+
+Across both time controls, opening risk is a statistically significant negative predictor of draws. Higher-risk openings are associated with a lower probability that the game ends in a draw, even after accounting for player strength.
+
+Specifically, the estimated coefficient on opening risk is −0.0322 (p < 0.001) in Blitz and −0.0294 (p < 0.001) in Classical games. Marginal effects indicate that a one standard deviation increase in opening risk reduces the probability of a draw by approximately 0.17 percentage points in Blitz and 0.14 percentage points in Classical. While the absolute magnitude is small—reflecting the low baseline draw rate (≈5%)—the effect is consistent, precisely estimated, and robust across time controls.
+
+Player rating is, as expected, a strong positive predictor of draws (z > 30). Importantly, the effect of opening risk remains statistically and substantively meaningful after controlling for rating, indicating that the relationship is not driven solely by stronger players selecting different openings.
+
+Descriptive statistics reveal a consistent unconditional pattern: drawn games are characterized by safer openings on average than decisive games. To formally test whether these distributions differ, we apply Kruskal–Wallis H-tests. The null hypothesis of equal distributions is rejected for both Blitz and Classical games (p < 0.001), confirming that the observed differences are unlikely to arise from sampling variation alone.
+
+Time forfeits are excluded from the main analysis to focus on outcomes driven by over-the-board chess decisions rather than clock management. To validate this choice, we estimate a separate logistic regression predicting time forfeits.
+
+Opening risk has no statistically significant association with time forfeits (coefficient = 0.0008, p = 0.651). Instead, forfeits are primarily explained by time control (more frequent in Blitz) and rating differentials. Including time forfeits in the main model—by coding them as decisive losses—has a negligible effect on the estimated opening risk coefficient (−0.0302 versus −0.0294), confirming that the primary results are robust to alternative outcome definitions.
