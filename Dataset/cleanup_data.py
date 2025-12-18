@@ -1,7 +1,5 @@
 # This file is used to cleanup the two datasets used for this project
 
-# TODO: add script for downloading the original dataset
-# TODO: Fix the problem with blitz vs classical
 import pandas as pd
 import numpy as np
 import re
