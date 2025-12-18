@@ -183,15 +183,29 @@ risk_range_raw = risk_range_z * risk_std + risk_mean
 
 colors = {'Blitz': 'blue', 'Classical': 'orange'}
 
+sns.scatterplot(
+    data=plot_df, 
+    x='mean_risk_bin', 
+    y='draw_rate', 
+    hue='time_control', 
+    palette=colors, 
+    s=100, 
+    alpha=0.6, 
+    legend=False 
+)
+
 for tc, model in models.items():
+    # Calculate mean rating for this specific time controlt
+    subset_tc = df_played[df_played['time_control'] == tc]
+    mean_rating_z_tc = subset_tc['avg_rating_z'].mean()
+
     # Create prediction data
     pred_data = pd.DataFrame({
         'mean_risk_z': risk_range_z,
-        'avg_rating_z': 0  # Fix rating at mean
+        'avg_rating_z': mean_rating_z_tc
     })
     
     # Handle event variable if it was in the model
-    subset_tc = df_played[df_played['time_control'] == tc]
     if 'event' in subset_tc.columns and subset_tc['event'].nunique() > 1:
         # Use the most common event as the reference
         most_common_event = subset_tc['event'].mode()[0]
@@ -203,9 +217,9 @@ for tc, model in models.items():
     except Exception as e:
         print(f"Could not plot predictions for {tc}: {e}")
 
-plt.title('Predicted Probability of Draw vs Opening Risk (Rating fixed at mean)')
+plt.title('Predicted Probability vs Actual Draw Rates')
 plt.xlabel('Opening Risk')
-plt.ylabel('Predicted Probability of Draw')
+plt.ylabel('Probability of Draw')
 plt.legend()
 plt.grid(True, alpha=0.3)
 plt.savefig('./Plots/opening_predicted_probabilities.png', dpi=300, bbox_inches='tight')
@@ -277,6 +291,35 @@ plt.tight_layout()
 plt.savefig('./Plots/opening_forfeit_rate_rating.png', dpi=300, bbox_inches='tight')
 plt.close()
 print("Saved Figure T2: Forfeit rate by rating")
+
+# Figure T3: Forfeit rate vs Opening Risk
+print("Generating Forfeit Rate vs Risk Plot...")
+df['risk_decile'] = pd.qcut(df['mean_risk'], 10, duplicates='drop')
+
+plt.figure(figsize=(12, 6))
+# Using pointplot to show the mean rate and confidence intervals
+sns.pointplot(
+    data=df, 
+    x='risk_decile', 
+    y='time_forfeit', 
+    color='dimgrey',
+    capsize=.1,
+    linestyles='-',
+    errorbar=('ci', 95)
+)
+plt.title('Time Forfeit Rate by Opening Risk Decile')
+plt.ylabel('Proportion of Games Ending in Time Forfeit')
+plt.xlabel('Opening Risk Range (Deciles)')
+plt.xticks(rotation=45)
+
+# Set Y-axis to 0-0.5 to show the lack of trend in context
+plt.ylim(0, 0.5)
+
+plt.grid(True, axis='y', alpha=0.3)
+plt.tight_layout()
+plt.savefig('./Plots/opening_forfeit_rate_risk.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("Saved Figure T3: Forfeit rate by risk")
 
 # Main Model including Forfeits
 print("Running Main Model (Classical) treating Time Forfeits as Decisive Losses...")
