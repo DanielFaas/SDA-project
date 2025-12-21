@@ -110,3 +110,9 @@ both_games = pd.concat([chess_games1, chess_games2], ignore_index=True, sort=Fal
 ## AI USAGE
 
 Used AI to generate unit tests. Ain't nobody got time for that.
+
+## Presentation / Poster
+
+Prezi: https://prezi.com/view/H5mFUXttdvjgCaDNzPrj/?referral_token=rTma_BlnB3FN
+
+
